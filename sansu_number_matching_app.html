@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff8ea" />
+  <title>●のかずとおなじすうじを、すばやくえらぼう。</title>
+  <style>
+    :root{
+      --bg:#fff8ea;
+      --card:#ffffff;
+      --ink:#2e2a28;
+      --accent:#ff8a3d;
+      --accent2:#ffd66b;
+      --red:#e53935;
+      --shadow:0 7px 0 rgba(80,60,40,.10);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden}
+    body{
+      font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;
+      background:linear-gradient(180deg,#fffaf0 0%,#fff2cf 100%);
+      color:var(--ink);
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
+    }
+    button{font:inherit;touch-action:manipulation}
+    .screen{
+      display:none;
+      position:fixed;
+      inset:0;
+      min-height:100dvh;
+      padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right))
+              max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+    }
+    .screen.active{display:flex}
+
+    /* START */
+    #startScreen{
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:34px;
+      text-align:center;
+    }
+    .start-title{
+      max-width:850px;
+      font-size:clamp(30px,5.2vw,64px);
+      line-height:1.45;
+      font-weight:800;
+      letter-spacing:.04em;
+    }
+    .dot-inline{font-size:1.05em}
+    .start-btn,.again-btn{
+      border:0;
+      border-radius:999px;
+      padding:20px 54px;
+      background:linear-gradient(180deg,#ff9b52,#ff7a2d);
+      color:#fff;
+      font-size:clamp(28px,4vw,46px);
+      font-weight:900;
+      box-shadow:0 8px 0 #d95d18,0 12px 22px rgba(180,90,20,.22);
+      cursor:pointer;
+    }
+    .start-btn:active,.again-btn:active{
+      transform:translateY(5px);
+      box-shadow:0 3px 0 #d95d18,0 7px 14px rgba(180,90,20,.18);
+    }
+
+    /* GAME */
+    #gameScreen{
+      flex-direction:column;
+      padding:0;
+      background:#fffdf8;
+    }
+    .top-area{
+      height:75%;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      padding:18px;
+    }
+    .timer{
+      position:absolute;
+      top:max(13px,env(safe-area-inset-top));
+      right:max(16px,env(safe-area-inset-right));
+      font-size:clamp(20px,2.7vw,34px);
+      font-weight:800;
+      color:#7b7068;
+      background:rgba(255,255,255,.82);
+      padding:7px 14px;
+      border-radius:999px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06);
+    }
+    .dots-wrap{
+      width:min(92vw,1000px);
+      height:min(56vh,470px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:clamp(28px,5vh,58px);
+    }
+    .dot-row{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:clamp(28px,6vw,78px);
+    }
+    .dot{
+      width:clamp(54px,8.5vw,102px);
+      aspect-ratio:1;
+      border-radius:50%;
+      background:#171717;
+      box-shadow:0 5px 0 rgba(0,0,0,.10);
+      flex:0 0 auto;
+    }
+    .bottom-area{
+      height:25%;
+      min-height:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:10px 16px 18px;
+      background:#fff1cf;
+      border-top:4px solid #ffe09a;
+    }
+    .number-grid{
+      width:min(100%,1050px);
+      display:grid;
+      grid-template-columns:repeat(9,1fr);
+      gap:clamp(5px,1vw,12px);
+    }
+    .num-card{
+      position:relative;
+      border:3px solid #f2c568;
+      border-radius:18px;
+      background:#fff;
+      min-height:clamp(68px,14vh,120px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:clamp(38px,6.6vw,78px);
+      line-height:1;
+      font-weight:900;
+      color:#333;
+      box-shadow:var(--shadow);
+      cursor:pointer;
+    }
+    .num-card:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(80,60,40,.10)}
+    .feedback{
+      pointer-events:none;
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:3;
+      opacity:0;
+      transform:scale(.4) rotate(-8deg);
+      transition:opacity .08s ease,transform .16s cubic-bezier(.2,1.6,.4,1);
+    }
+    .feedback.show{
+      opacity:1;
+      transform:scale(1) rotate(-6deg);
+    }
+    .feedback svg{
+      width:94%;
+      height:94%;
+      overflow:visible;
+      filter:drop-shadow(0 2px 0 rgba(255,255,255,.9));
+    }
+    .mark-simple{
+      font-family:Arial,sans-serif;
+      font-weight:900;
+      font-size:clamp(70px,11vw,132px);
+      color:var(--red);
+      line-height:1;
+    }
+
+    /* END */
+    #endScreen{
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
+      text-align:center;
+      padding-top:clamp(42px,8vh,90px);
+      padding-bottom:clamp(44px,8vh,90px);
+    }
+    .end-label{
+      font-size:clamp(28px,5vw,58px);
+      font-weight:900;
+      letter-spacing:.04em;
+    }
+    .score{
+      font-family:"Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+      font-size:clamp(130px,28vw,330px);
+      line-height:.9;
+      font-weight:900;
+      color:#ff7b36;
+      text-shadow:0 8px 0 #ffd67c,0 12px 18px rgba(130,70,20,.15);
+    }
+    .end-message{
+      font-size:clamp(26px,4vw,52px);
+      line-height:1.5;
+      font-weight:900;
+    }
+
+    @media (max-width:700px){
+      .number-grid{grid-template-columns:repeat(9,1fr);gap:4px}
+      .num-card{border-width:2px;border-radius:12px;min-height:72px}
+      .dot-row{gap:clamp(18px,5vw,34px)}
+      .dot{width:clamp(45px,10.5vw,70px)}
+      .top-area{height:72%}
+      .bottom-area{height:28%;padding-left:5px;padding-right:5px}
+    }
+    @media (max-width:430px){
+      .num-card{font-size:clamp(30px,10vw,45px);min-height:64px}
+      .start-title{font-size:clamp(28px,8vw,40px)}
+      .dot{width:clamp(42px,12vw,58px)}
+      .dot-row{gap:clamp(12px,4vw,22px)}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section id="startScreen" class="screen active" aria-label="スタート画面">
+      <div class="start-title"><span class="dot-inline">●</span>のかずとおなじすうじを、<br>すばやくえらぼう。</div>
+      <button id="startBtn" class="start-btn" type="button">スタート</button>
+    </section>
+
+    <section id="gameScreen" class="screen" aria-label="もんだい画面">
+      <div class="top-area">
+        <div id="timer" class="timer">1:00</div>
+        <div id="dots" class="dots-wrap" aria-label="丸の数"></div>
+      </div>
+      <div class="bottom-area">
+        <div id="numberGrid" class="number-grid" aria-label="数字をえらぶ"></div>
+      </div>
+    </section>
+
+    <section id="endScreen" class="screen" aria-label="終了画面">
+      <div class="end-label">きょうのせいかいしたかず</div>
+      <div id="score" class="score">0</div>
+      <div class="end-message">よくがんばったね。<br>あしたもまってるよ</div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const GAME_MS = 60_000;
+  const FEEDBACK_MS = 320;
+
+  const startScreen = document.getElementById('startScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const endScreen = document.getElementById('endScreen');
+  const startBtn = document.getElementById('startBtn');
+  const dots = document.getElementById('dots');
+  const grid = document.getElementById('numberGrid');
+  const timerEl = document.getElementById('timer');
+  const scoreEl = document.getElementById('score');
+
+  let answer = 1;
+  let questionShownAt = 0;
+  let gameStartedAt = 0;
+  let timerId = null;
+  let gameOver = false;
+  let accepting = false;
+  let correctCount = 0;
+  let previousAnswer = null;
+
+  // 日本語音声。端末に入っている自然な日本語音声を優先して使います。
+  function pickJapaneseVoice() {
+    const voices = speechSynthesis.getVoices();
+    const ja = voices.filter(v => /^ja[-_]/i.test(v.lang) || /Japanese|日本語/i.test(v.name));
+    if (!ja.length) return null;
+    const preferred = [
+      /Nanami/i, /Haruka/i, /Ayumi/i, /Kyoko/i, /Otoya/i,
+      /Google.*日本語/i, /Google.*Japanese/i
+    ];
+    for (const p of preferred) {
+      const found = ja.find(v => p.test(v.name));
+      if (found) return found;
+    }
+    return ja[0];
+  }
+
+  function speak(text, {rate=1.03, pitch=1.08, cancel=true} = {}) {
+    if (!('speechSynthesis' in window)) return;
+    if (cancel) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    u.rate = rate;
+    u.pitch = pitch;
+    u.volume = 1;
+    const voice = pickJapaneseVoice();
+    if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  }
+
+  // 音声一覧の読み込みを促す
+  if ('speechSynthesis' in window) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  }
+
+  function showScreen(target) {
+    [startScreen, gameScreen, endScreen].forEach(s => s.classList.remove('active'));
+    target.classList.add('active');
+  }
+
+  function rand1to9Different(prev) {
+    let n;
+    do n = 1 + Math.floor(Math.random() * 9);
+    while (n === prev);
+    return n;
+  }
+
+  function renderDots(n) {
+    dots.innerHTML = '';
+    const rows = n <= 5 ? [n] : [5, n - 5];
+    rows.forEach(count => {
+      const row = document.createElement('div');
+      row.className = 'dot-row';
+      for (let i=0;i<count;i++) {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        row.appendChild(d);
+      }
+      dots.appendChild(row);
+    });
+    dots.setAttribute('aria-label', `丸が${n}こ`);
+  }
+
+  function flowerSvg() {
+    // 赤い「花丸」を端末差なく表示するためのSVG
+    let petals = '';
+    for (let i=0;i<12;i++) {
+      const a = (i * 30) * Math.PI / 180;
+      const cx = 50 + Math.cos(a) * 31;
+      const cy = 50 + Math.sin(a) * 31;
+      petals += `<ellipse cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" rx="12" ry="20"
+        transform="rotate(${i*30+90} ${cx.toFixed(2)} ${cy.toFixed(2)})"
+        fill="none" stroke="#e53935" stroke-width="5.5"/>`;
+    }
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">
+      ${petals}
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#e53935" stroke-width="6"/>
+      <circle cx="50" cy="50" r="15" fill="none" stroke="#e53935" stroke-width="5"/>
+    </svg>`;
+  }
+
+  function buildNumberCards() {
+    grid.innerHTML = '';
+    for (let n=1;n<=9;n++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'num-card';
+      b.dataset.n = n;
+      b.setAttribute('aria-label', `${n}`);
+      b.innerHTML = `<span>${n}</span><span class="feedback"></span>`;
+      b.addEventListener('click', () => chooseNumber(n, b));
+      grid.appendChild(b);
+    }
+  }
+
+  function clearFeedback() {
+    document.querySelectorAll('.feedback').forEach(el => {
+      el.classList.remove('show');
+      el.innerHTML = '';
+    });
+  }
+
+  function renderQuestion() {
+    if (gameOver) return;
+    clearFeedback();
+    answer = rand1to9Different(previousAnswer);
+    previousAnswer = answer;
+    renderDots(answer);
+    questionShownAt = performance.now();
+    accepting = true;
+  }
+
+  function showMark(card, tier) {
+    const f = card.querySelector('.feedback');
+    if (tier === 1) {
+      f.innerHTML = flowerSvg();
+    } else if (tier === 2) {
+      f.innerHTML = `<span class="mark-simple">◎</span>`;
+    } else {
+      f.innerHTML = `<span class="mark-simple">○</span>`;
+    }
+    requestAnimationFrame(() => f.classList.add('show'));
+  }
+
+  function chooseNumber(n, card) {
+    if (!accepting || gameOver) return;
+
+    if (n !== answer) {
+      speak('ちがう数字だよ', {rate:1.05, pitch:1.08});
+      return;
+    }
+
+    accepting = false;
+    correctCount++;
+    const elapsed = performance.now() - questionShownAt;
+
+    let tier, text;
+    if (elapsed < 1000) {
+      tier = 1; text = 'すんばらしい！';
+    } else if (elapsed < 2000) {
+      tier = 2; text = 'やったね';
+    } else {
+      tier = 3; text = '正解';
+    }
+
+    showMark(card, tier);
+    speak(text, {rate:1.08, pitch:1.12});
+
+    // 音声が流れ始めたら、すぐ次の異なる数字へ
+    setTimeout(() => {
+      if (!gameOver) renderQuestion();
+    }, FEEDBACK_MS);
+  }
+
+  function updateTimer() {
+    if (gameOver) return;
+    const elapsed = performance.now() - gameStartedAt;
+    const remain = Math.max(0, GAME_MS - elapsed);
+    const sec = Math.ceil(remain / 1000);
+    timerEl.textContent = `0:${String(sec).padStart(2,'0')}`;
+
+    if (remain <= 0) {
+      finishGame();
+    }
+  }
+
+  function startGame() {
+    window.speechSynthesis?.cancel?.();
+    gameOver = false;
+    accepting = false;
+    correctCount = 0;
+    previousAnswer = null;
+    timerEl.textContent = '1:00';
+    showScreen(gameScreen);
+    buildNumberCards();
+    gameStartedAt = performance.now();
+    renderQuestion();
+    clearInterval(timerId);
+    timerId = setInterval(updateTimer, 100);
+  }
+
+  function finishGame() {
+    if (gameOver) return;
+    gameOver = true;
+    accepting = false;
+    clearInterval(timerId);
+    timerId = null;
+    window.speechSynthesis?.cancel?.();
+
+    // 「表示された選択画面より1少ない数字」＝正解して次へ進めた回数
+    scoreEl.textContent = correctCount;
+    showScreen(endScreen);
+    speak('よくがんばったね。あしたもまってるよ', {rate:0.96, pitch:1.08});
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  // 初期画面の案内音声
+  function introVoice() {
+    speak('丸の数と同じ数字を素早く選ぼう。スタートボタンを押すと始まるよ',
+          {rate:0.96, pitch:1.08});
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(introVoice, 450);
+  }, {once:true});
+
+  // ブラウザが初回自動音声を止めた場合にも、最初の操作時に音声機能を有効化
+  document.addEventListener('pointerdown', () => {
+    if ('speechSynthesis' in window) speechSynthesis.resume();
+  }, {once:true});
+})();
+</script>
+</body>
+</html>
